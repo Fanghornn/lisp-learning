@@ -12,6 +12,8 @@
 ;; Global variable declaration 'db'
 (defvar *db* nil)
 
+(defvar *db-file-path* "./records.db")
+
 (defun dump-db ()
   (dolist (item *db*)
     (format t "~{~a:~10t~a~%~}~%" item)))
@@ -45,13 +47,36 @@
   (dump-db))
 
 ;; Save database to file
-(defun save-db (filename)
-  (with-open-file (out filename
+(defun save-db ()
+  (with-open-file (out *db-file-path*
 		  :direction :output
 		  :if-exists :supersede)
     (with-standard-io-syntax
       (print *db* out))))
 
 ;; Open database from file
-;;(defun open-db (path))
+(defun open-db ()
+  (with-open-file (in *db-file-path*)
+    (with-standard-io-syntax
+      (setf *db* (read in)))))
+
+(defun select (predicate)
+  (remove-if-not predicate *db*))
+
+(defun select-by-artist (artist)
+  (select #'(lambda (cd) (equal (getf cd :artist) artist))))
+
+;;
+;; # is a so-called dispatching macro character
+;; When compiler sees the symbol '#' he will look
+;; into an internal dictionary of shortcuts expression
+;; to returns some functions/anonymous functions
+;; or even variables likes hex and binary values
+;;
+;; #'functionname   ->  (function functionname)
+;; #(1 2 3)         ->  the vector of the elements 1 2 3
+;; #c(1 2)          ->  a complex number
+;; #xFFFF           ->  a hex number
+;; #b1111           ->  a binary number
+;;
 
